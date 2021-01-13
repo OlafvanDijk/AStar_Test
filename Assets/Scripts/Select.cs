@@ -16,7 +16,7 @@ public class Select : MonoBehaviour
     private RoutePooler routePooler;
 
     /// <summary>
-    /// Create Route Tiles and Enqueue them
+    /// Create Route Tiles and Enqueue them.
     /// </summary>
     private void Awake()
     {
@@ -29,7 +29,7 @@ public class Select : MonoBehaviour
     }
 
     /// <summary>
-    /// Select a Tile when clicking
+    /// Select a Tile when clicking.
     /// </summary>
     private void Update()
     {
@@ -39,7 +39,7 @@ public class Select : MonoBehaviour
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo))
             {
                 Tile selected = hitInfo.collider.GetComponent<Tile>();
-                if (selected)
+                if (selected && selected.CanBeCrossed())
                 {
                     SelectTile(selected);
                 }
@@ -47,6 +47,11 @@ public class Select : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Select the given tile as start or goal.
+    /// This method also calls the spawning of the Route Tiles.
+    /// </summary>
+    /// <param name="selected">Selected tile</param>
     private void SelectTile(Tile selected)
     {
         if (!start)
@@ -69,7 +74,7 @@ public class Select : MonoBehaviour
     }
 
     /// <summary>
-    /// Spawns a RouteTile on the given position
+    /// Spawns a RouteTile on the given position.
     /// </summary>
     /// <param name="position">Position of path tile</param>
     /// <param name="isStartOrGoal">Detirmens the color of the material</param>
@@ -92,7 +97,7 @@ public class Select : MonoBehaviour
     }
 
     /// <summary>
-    /// Set Position of RouteTile
+    /// Set Position of RouteTile.
     /// </summary>
     /// <param name="tile">Tile below the route</param>
     /// <param name="routeTile">Route Tile to adjust</param>

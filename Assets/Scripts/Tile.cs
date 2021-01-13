@@ -49,17 +49,17 @@ public class Tile : MonoBehaviour, IAStarNode
         renderer.material = terrainMaterial;
     }
 
-    private float GetCost()
+    public float GetCost()
     {
         return cost;
     }
 
-    private bool CanBeCrossed()
+    public bool CanBeCrossed()
     {
         return canBeCrossed;
     }
 
-    private Vector2Int GetCoordinates()
+    public Vector2Int GetCoordinates()
     {
         return coordinates;
     }

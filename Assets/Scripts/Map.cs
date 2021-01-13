@@ -5,35 +5,54 @@ using System;
 
 public class Map : MonoBehaviour
 {
+    [Serializable]
+    private struct AvailableTile
+    {
+        public TerrainObject terrain;
+        [Range(0,1)] public float perlinHeight;
+    }
+
+    [Header("Grid")]
+    [SerializeField] private Vector3 gridSpacing = new Vector3(1f, 0.74f, 0.5f);
+    [SerializeField] private int gridSize = 8;
+
+    [Header("Perlin Noise")]
+    [SerializeField] int seed = 3;
+    [SerializeField] Noise noiseGenerator;
+
     [Header("Tiles")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private Transform tilesParent;
-    [SerializeField] private List<TerrainObject> availableTiles;
-
-    [Header("Grid")]
-    [SerializeField] private Vector3 gridSpacing;
-    [SerializeField] private Vector2Int gridSize;
+    [SerializeField] private List<AvailableTile> availableTiles;
 
     private Tile[,] tiles;
+    private float[,] noiseMap;
 
-    // Start is called before the first frame update
-    void Awake()
+    /// <summary>
+    /// Create Map and set the neighbours.
+    /// </summary>
+    private void Awake()
     {
-        tiles = new Tile[gridSize.x, gridSize.y];
+        tiles = new Tile[gridSize, gridSize];
         CreateMap();
         SetNeighbours();
     }
 
+    /// <summary>
+    /// Creates a hexagon grid and generates the noise to be used later.
+    /// </summary>
     private void CreateMap()
     {
-        for (int y = 0; y < gridSize.y; y++)
+        noiseMap = noiseGenerator.GenerateNoiseMap(seed);
+
+        for (int y = 0; y < gridSize; y++)
         {
-            for (int x = 0; x < gridSize.x; x++)
+            for (int x = 0; x < gridSize; x++)
             {
                 GameObject tileObject = Instantiate(tilePrefab, tilesParent);
 
                 float newY = y * gridSpacing.y;
-                float newX = x;
+                float newX = x * gridSpacing.x;
                 if (IsEven(y))
                 {
                     newX += gridSpacing.z;
@@ -44,17 +63,19 @@ public class Map : MonoBehaviour
 
                 Tile currentTile = tileObject.GetComponent<Tile>();
                 tiles[x, y] = currentTile;
-
             }
         }
     }
 
+    /// <summary>
+    /// Set the neighbours for all the tiles.
+    /// Cleares the noisemap to free up memory.
+    /// </summary>
     private void SetNeighbours()
     {
-
-        for (int y = 0; y < gridSize.y; y++)
+        for (int y = 0; y < gridSize; y++)
         {
-            for (int x = 0; x < gridSize.x; x++)
+            for (int x = 0; x < gridSize; x++)
             {
                 Vector2Int left = new Vector2Int(-1, 0);
                 Vector2Int right = new Vector2Int(1, 0);
@@ -88,18 +109,32 @@ public class Map : MonoBehaviour
                 currentTile.AddNeighbours(neighbours);
             }
         }
+
+        noiseMap = null;
     }
 
+    /// <summary>
+    /// Check if the given number is even or uneven.
+    /// </summary>
+    /// <param name="number">Number to check</param>
+    /// <returns>True if even, false if uneven</returns>
     private bool IsEven(float number)
     {
         return number % 2 == 0;
     }
 
+    /// <summary>
+    /// Add the tile as a neighbour that results from adding the given index to the current index.
+    /// </summary>
+    /// <param name="neighbours">List of Neighbours</param>
+    /// <param name="index">Indexes to add to the current index</param>
+    /// <param name="currentX">Current X index</param>
+    /// <param name="currentY">Current Y index</param>
     private void AddTile(ref List<Tile> neighbours, Vector2Int index, int currentX, int currentY)
     {
         index.x += currentX;
         index.y += currentY;
-        if (index.x < 0 || index.x >= gridSize.x || index.y < 0 || index.y >= gridSize.y)
+        if (index.x < 0 || index.x >= gridSize || index.y < 0 || index.y >= gridSize)
         {
             return;
         }
@@ -114,12 +149,40 @@ public class Map : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Set Terrain for the given tile.
+    /// Terrain is chosen by a calculation that uses perlin noise.
+    /// </summary>
+    /// <param name="tile">Tile to give terrain</param>
+    /// <param name="coordinates">Coordinates (indexes) of the given tile</param>
     private void SetTerrain(Tile tile, Vector2Int coordinates)
     {
         if (availableTiles.Count > 0)
         {
-            int index = UnityEngine.Random.Range(0, availableTiles.Count);
-            TerrainObject terrain = availableTiles[index];
+            coordinates *= noiseGenerator.GetWidthAndHeight() / gridSize;
+
+            float perlinNoise = noiseMap[coordinates.x, coordinates.y];
+
+            int index = 0;
+            float previousHeight = 0;
+
+            for (int i = 0; i < availableTiles.Count; i++)
+            {
+                AvailableTile available = availableTiles[i];
+                if (perlinNoise == previousHeight || (perlinNoise > previousHeight && perlinNoise <= available.perlinHeight))
+                {
+                    index = i;
+                    break;
+                }
+                else
+                {
+                    previousHeight = available.perlinHeight;
+                }
+            }       
+
+            Debug.Log("Index value:" + index);
+
+            TerrainObject terrain = availableTiles[index].terrain;
             tile.SetTileInfo(terrain.cost, terrain.canBeCrossed, terrain.terrainMaterial, coordinates);
         }
     }
