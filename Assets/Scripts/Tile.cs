@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using Pathing;
 
+[RequireComponent(typeof(Renderer))]
 public class Tile : MonoBehaviour, IAStarNode
 {
     public IEnumerable<IAStarNode> Neighbours => neighbours;
 
-    //Todo x,y
+    [SerializeField] private float cost;
+    [SerializeField] private bool canBeCrossed;
+    [SerializeField] private Vector2Int coordinates;
 
     private List<Tile> neighbours = new List<Tile>();
-    private float cost;
+    private Renderer renderer;
 
-    public float GetCost()
+    private void Awake()
     {
-        return cost;
+        renderer = GetComponent<Renderer>();
     }
 
     public void AddNeighbours(List<Tile> neighbours)
@@ -38,24 +41,26 @@ public class Tile : MonoBehaviour, IAStarNode
         return 0;
     }
 
-    /*public void Select()
+    public void SetTileInfo(float cost, bool canBeCrossed, Material terrainMaterial, Vector2Int coordinates)
     {
-        selected = !selected;
+        this.cost = cost;
+        this.canBeCrossed = canBeCrossed;
+        this.coordinates = coordinates;
+        renderer.material = terrainMaterial;
+    }
 
-        Vector3 newPos;
+    private float GetCost()
+    {
+        return cost;
+    }
 
-        if (selected)
-        {
-            newPos = Vector3.up;
-        }
-        else
-        {
-            newPos = -Vector3.up;
-        }
+    private bool CanBeCrossed()
+    {
+        return canBeCrossed;
+    }
 
-        foreach (Tile neighbour in neighbours)
-        {
-            neighbour.transform.position += newPos;
-        }
-    }*/
+    private Vector2Int GetCoordinates()
+    {
+        return coordinates;
+    }
 }

@@ -8,6 +8,7 @@ public class Map : MonoBehaviour
     [Header("Tiles")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private Transform tilesParent;
+    [SerializeField] private List<TerrainObject> availableTiles;
 
     [Header("Grid")]
     [SerializeField] private Vector3 gridSpacing;
@@ -29,7 +30,7 @@ public class Map : MonoBehaviour
         {
             for (int x = 0; x < gridSize.x; x++)
             {
-                GameObject tile = Instantiate(tilePrefab, tilesParent);
+                GameObject tileObject = Instantiate(tilePrefab, tilesParent);
 
                 float newY = y * gridSpacing.y;
                 float newX = x;
@@ -38,10 +39,12 @@ public class Map : MonoBehaviour
                     newX += gridSpacing.z;
                 }
 
-                tile.name = $"Hexagon {y}-{x}";
-                tile.transform.position = new Vector3(newX, 0, newY);
+                tileObject.name = $"Hexagon {y}-{x}";
+                tileObject.transform.position = new Vector3(newX, 0, newY);
 
-                tiles[x, y] = tile.GetComponent<Tile>();
+                Tile currentTile = tileObject.GetComponent<Tile>();
+                tiles[x, y] = currentTile;
+
             }
         }
     }
@@ -80,8 +83,9 @@ public class Map : MonoBehaviour
                 AddTile(ref neighbours, bottomLeft, x, y);
                 AddTile(ref neighbours, bottomRight, x, y);
 
-                Tile current = tiles[x, y];
-                current.AddNeighbours(neighbours);
+                Tile currentTile = tiles[x, y];
+                SetTerrain(currentTile, new Vector2Int(x, y));
+                currentTile.AddNeighbours(neighbours);
             }
         }
     }
@@ -109,6 +113,14 @@ public class Map : MonoBehaviour
             Debug.Log(e.Message);
         }
     }
+
+    private void SetTerrain(Tile tile, Vector2Int coordinates)
+    {
+        if (availableTiles.Count > 0)
+        {
+            int index = UnityEngine.Random.Range(0, availableTiles.Count);
+            TerrainObject terrain = availableTiles[index];
+            tile.SetTileInfo(terrain.cost, terrain.canBeCrossed, terrain.terrainMaterial, coordinates);
+        }
+    }
 }
-
-

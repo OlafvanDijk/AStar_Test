@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Select : MonoBehaviour
 {
+    [Header("Route")]
     [SerializeField] private GameObject routePrefab;
     [SerializeField] private Material goalMaterial;
     [SerializeField] private Material routeMaterial;
@@ -40,25 +41,29 @@ public class Select : MonoBehaviour
                 Tile selected = hitInfo.collider.GetComponent<Tile>();
                 if (selected)
                 {
-                    if (!start)
-                    {
-                        routePooler.EnqueueAll();
-
-                        start = selected;
-                        SpawnRouteTile(start.transform.position, true);
-                        goal = null;
-                    }
-                    else if (!goal)
-                    {
-                        if (selected != start)
-                        {
-                            goal = selected;
-                            SpawnRouteTile(goal.transform.position, true);
-
-                            start = null;
-                        }
-                    }
+                    SelectTile(selected);
                 }
+            }
+        }
+    }
+
+    private void SelectTile(Tile selected)
+    {
+        if (!start)
+        {
+            routePooler.EnqueueAll();
+
+            start = selected;
+            SpawnRouteTile(start.transform.position, true);
+            goal = null;
+        }
+        else if (!goal)
+        {
+            if (selected != start)
+            {
+                goal = selected;
+                SpawnRouteTile(goal.transform.position, true);
+                start = null;
             }
         }
     }
