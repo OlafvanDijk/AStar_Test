@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 
 public class Map : MonoBehaviour
 {
@@ -62,7 +63,9 @@ public class Map : MonoBehaviour
                 tileObject.transform.position = new Vector3(newX, 0, newY);
 
                 Tile currentTile = tileObject.GetComponent<Tile>();
+                currentTile.SetMap(this);
                 tiles[x, y] = currentTile;
+                SetTerrain(currentTile, new Vector2Int(x, y));
             }
         }
     }
@@ -96,17 +99,19 @@ public class Map : MonoBehaviour
                     bottomRight = new Vector2Int(0, -1); //BottomRight = Y-1 
                 }
 
-                List<Tile> neighbours = new List<Tile>();
-                AddTile(ref neighbours, left, x, y);
-                AddTile(ref neighbours, right, x, y);
-                AddTile(ref neighbours, upperLeft, x, y);
-                AddTile(ref neighbours, upperRight, x, y);
-                AddTile(ref neighbours, bottomLeft, x, y);
-                AddTile(ref neighbours, bottomRight, x, y);
-
                 Tile currentTile = tiles[x, y];
-                SetTerrain(currentTile, new Vector2Int(x, y));
-                currentTile.AddNeighbours(neighbours);
+                if (currentTile.CanBeCrossed())
+                {
+                    List<Tile> neighbours = new List<Tile>();
+                    AddTile(ref neighbours, left, x, y);
+                    AddTile(ref neighbours, right, x, y);
+                    AddTile(ref neighbours, upperLeft, x, y);
+                    AddTile(ref neighbours, upperRight, x, y);
+                    AddTile(ref neighbours, bottomLeft, x, y);
+                    AddTile(ref neighbours, bottomRight, x, y);
+
+                    currentTile.AddNeighbours(neighbours);
+                }
             }
         }
 
@@ -139,14 +144,10 @@ public class Map : MonoBehaviour
             return;
         }
 
-        try
-        {
-            neighbours.Add(tiles[index.x, index.y]);
-        }
-        catch (Exception e)
-        {
-            Debug.Log(e.Message);
-        }
+        Tile tile = tiles[index.x, index.y];
+        if (!tile.CanBeCrossed())
+            return;
+        neighbours.Add(tile);
     }
 
     /// <summary>
@@ -178,12 +179,28 @@ public class Map : MonoBehaviour
                 {
                     previousHeight = available.perlinHeight;
                 }
-            }       
-
-            Debug.Log("Index value:" + index);
+            }
 
             TerrainObject terrain = availableTiles[index].terrain;
             tile.SetTileInfo(terrain.cost, terrain.canBeCrossed, terrain.terrainMaterial, coordinates);
+        }
+    }
+
+    public float GetAverageCost()
+    {
+        try
+        {
+            List<float> costs = new List<float>();
+            foreach (AvailableTile tile in availableTiles)
+            {
+                costs.Add(tile.terrain.cost);
+            }
+            return costs.Average();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e.Message);
+            return 0;
         }
     }
 }

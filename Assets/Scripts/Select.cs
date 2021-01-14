@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Pathing;
 
 public class Select : MonoBehaviour
 {
@@ -68,9 +69,34 @@ public class Select : MonoBehaviour
             {
                 goal = selected;
                 SpawnRouteTile(goal.transform.position, true);
+                ShowRoute();
                 start = null;
             }
         }
+    }
+
+    private void ShowRoute()
+    {
+        float cost = 0;
+        IList<IAStarNode> route = AStar.GetPath(start, goal);
+        for (int i = 0; i < route.Count; i++)
+        {
+            Tile tile = route[i] as Tile;
+            if (i == 0)
+            {
+                continue;
+            }
+            else if (i == route.Count - 1)
+            {
+                cost += tile.GetCost();
+                continue;
+            }
+            SpawnRouteTile(tile.transform.position, false);
+            cost += tile.GetCost();
+        }
+
+        //Debug.Log("Estimated cost: " + navigation.EstimatedCost(start, goal));
+        Debug.Log("Route cost: " + cost);
     }
 
     /// <summary>
