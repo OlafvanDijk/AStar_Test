@@ -5,34 +5,54 @@ using Pathing;
 using System;
 
 [RequireComponent(typeof(Renderer))]
-public class Tile : MonoBehaviour, IAStarNode, IComparable
+public class Tile : MonoBehaviour, IAStarNode
 {
     public IEnumerable<IAStarNode> Neighbours => neighbours;
 
-    [SerializeField] private float cost;
-    [SerializeField] private bool canBeCrossed;
-    [SerializeField] private Vector2Int coordinates;
-
+    private float cost;
+    private bool canBeCrossed;
+    private Vector2Int coordinates;
     private List<Tile> neighbours = new List<Tile>();
+
     private Map map;
     private Renderer renderer;
 
+    #region Unity Methods
+    /// <summary>
+    /// Get Renderer
+    /// </summary>
     private void Awake()
     {
         renderer = GetComponent<Renderer>();
     }
+    #endregion
 
+    #region Public Methods
+    /// <summary>
+    /// Add the given neighbours to the neighbours list
+    /// </summary>
+    /// <param name="neighbours">Neighbouring Tile Nodes</param>
     public void AddNeighbours(List<Tile> neighbours)
     {
         this.neighbours.AddRange(neighbours);
     }
 
+    /// <summary>
+    /// Shows the cost of moving to the given neighbour
+    /// </summary>
+    /// <param name="neighbour"></param>
+    /// <returns>Cost of the neighbouring tile.</returns>
     public float CostTo(IAStarNode neighbour)
     {
         Tile tile = neighbour as Tile;
         return tile.GetCost();
     }
 
+    /// <summary>
+    /// Estimates the cost from this tile to the given goal tile
+    /// </summary>
+    /// <param name="goal"></param>
+    /// <returns>Estimated cost from this tile to the goal</returns>
     public float EstimatedCostTo(IAStarNode goal)
     {
         float avgCost = map.GetAverageCost();
@@ -51,6 +71,13 @@ public class Tile : MonoBehaviour, IAStarNode, IComparable
         return avgCost;
     }
 
+    /// <summary>
+    /// Set the terrain info for the tile
+    /// </summary>
+    /// <param name="cost">The cost of crossing this tile</param>
+    /// <param name="canBeCrossed">Can this tile be crossed or not</param>
+    /// <param name="terrainMaterial">Material for how the tile should look</param>
+    /// <param name="coordinates">Coordinates in the map</param>
     public void SetTileInfo(float cost, bool canBeCrossed, Material terrainMaterial, Vector2Int coordinates)
     {
         this.cost = cost;
@@ -59,26 +86,44 @@ public class Tile : MonoBehaviour, IAStarNode, IComparable
         renderer.material = terrainMaterial;
     }
 
+    /// <summary>
+    /// Returns cost
+    /// </summary>
+    /// <returns>Cost of the Tile</returns>
     public float GetCost()
     {
         return cost;
     }
 
+    /// <summary>
+    /// Returns the canBeCrossed value
+    /// </summary>
+    /// <returns>Can this tile be crossed</returns>
     public bool CanBeCrossed()
     {
         return canBeCrossed;
     }
 
+    /// <summary>
+    /// Returns the coordinates of this tile
+    /// </summary>
+    /// <returns>coordinates of this tile within the map</returns>
     public Vector2Int GetCoordinates()
     {
         return coordinates;
     }
 
+    /// <summary>
+    /// Set a refference to the map
+    /// </summary>
+    /// <param name="map">Map that created the tile</param>
     public void SetMap(Map map)
     {
         this.map = map;
     }
+    #endregion
 
+    #region Private Methods
     /// <summary>
     /// Move the given Vector2 towards the goal.
     /// Keeping in mind the diagonal movement of a hexagonal grid.
@@ -145,23 +190,5 @@ public class Tile : MonoBehaviour, IAStarNode, IComparable
             }
         }
     }
-
-    public int CompareTo(object obj)
-    {
-        if (obj == null)
-            return 1;
-
-        Tile tile = obj as Tile;
-        if (tile != null)
-        {
-            if (tile.cost >= this.cost)
-                return 1;
-            else
-                return -1;
-        }
-        else
-        {
-            throw new ArgumentException("Object is not a Tile");
-        }
-    }
+    #endregion
 }

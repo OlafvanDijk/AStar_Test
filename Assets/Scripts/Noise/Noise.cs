@@ -14,7 +14,6 @@ public class Noise : MonoBehaviour
     [SerializeField] private float persistance = 0.5f;
     [Range(1, 100)]
     [SerializeField] private float lacunarity = 2f;
-
     [SerializeField] private Vector2 offset;
 
     /// <summary>

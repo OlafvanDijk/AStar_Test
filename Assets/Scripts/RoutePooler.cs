@@ -35,9 +35,9 @@ public class RoutePooler
     }
 
     /// <summary>
-    /// Get the first available routeTile
+    /// Get the next in line available routeTile
     /// </summary>
-    /// <returns></returns>
+    /// <returns>return the next in line available routeTile</returns>
     public GameObject Dequeue()
     {
         try

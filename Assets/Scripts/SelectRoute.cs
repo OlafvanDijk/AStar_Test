@@ -2,20 +2,34 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Pathing;
+using TMPro;
 
-public class Select : MonoBehaviour
+public class SelectRoute : MonoBehaviour
 {
     [Header("Route")]
+    [Tooltip("Prefab that will be used to display the route.")]
     [SerializeField] private GameObject routePrefab;
-    [SerializeField] private Material goalMaterial;
+
+    [Tooltip("Material of the route nodes between the start and goal.")]
     [SerializeField] private Material routeMaterial;
-    [SerializeField] private int routePoolSize = 16;
-    [SerializeField] private Transform routeParent;
+
+    [Tooltip("Material of the the start and goal route nodes.")]
+    [SerializeField] private Material goalMaterial;
+
+    [Tooltip("Size of the reusable route object list.")]
+    [SerializeField] private int routePoolSize = 32;
+
+    [Tooltip("Parent object of the reusable route objects.")]
+    [SerializeField] private Transform routePoolParent;
+
+    [Tooltip("Text field displaying the cost of the current route.")]
+    [SerializeField] private TextMeshProUGUI costTextField;
 
     private Tile start;
     private Tile goal;
     private RoutePooler routePooler;
 
+    #region Unity Methods
     /// <summary>
     /// Create Route Tiles and Enqueue them.
     /// </summary>
@@ -24,7 +38,7 @@ public class Select : MonoBehaviour
         routePooler = new RoutePooler();
         for (int i = 0; i < routePoolSize; i++)
         {
-            GameObject route = Instantiate(routePrefab, routeParent);
+            GameObject route = Instantiate(routePrefab, routePoolParent);
             routePooler.Enqueue(route);
         }
     }
@@ -47,7 +61,9 @@ public class Select : MonoBehaviour
             }
         }
     }
+    #endregion
 
+    #region Private Methods
     /// <summary>
     /// Select the given tile as start or goal.
     /// This method also calls the spawning of the Route Tiles.
@@ -75,6 +91,9 @@ public class Select : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Show the route between the start and goal tile.
+    /// </summary>
     private void ShowRoute()
     {
         float cost = 0;
@@ -95,8 +114,8 @@ public class Select : MonoBehaviour
             cost += tile.GetCost();
         }
 
-        //Debug.Log("Estimated cost: " + navigation.EstimatedCost(start, goal));
-        Debug.Log("Route cost: " + cost);
+        if (costTextField)
+            costTextField.text = $"Cost: {cost} Days";
     }
 
     /// <summary>
@@ -112,13 +131,9 @@ public class Select : MonoBehaviour
             SetRouteTilePosition(position, routeTile);
             Renderer renderer = routeTile.GetComponent<Renderer>();
             if (isStartOrGoal)
-            {
                 renderer.material = goalMaterial;
-            }
             else
-            {
                 renderer.material = routeMaterial;
-            }
         }
     }
 
@@ -132,4 +147,5 @@ public class Select : MonoBehaviour
         Vector3 pos = routeTile.transform.position;
         routeTile.transform.position = new Vector3(tile.x, pos.y, tile.z);
     }
+    #endregion
 }

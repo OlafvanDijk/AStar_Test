@@ -9,26 +9,37 @@ public class Map : MonoBehaviour
     [Serializable]
     private struct AvailableTile
     {
+        [Tooltip("ScriptableObject of the Terrain")]
         public TerrainObject terrain;
-        [Range(0,1)] public float perlinHeight;
+
+        [Tooltip("Height value at which this terrain will not appear anymore.")]
+        [Range(0, 1)] public float perlinHeight;
     }
 
     [Header("Grid")]
+    [Tooltip("Spacing at which the tiles will spawn.")]
     [SerializeField] private Vector3 gridSpacing = new Vector3(1f, 0.74f, 0.5f);
+    [Tooltip("Grid size. This covers both x and y size.")]
     [SerializeField] private int gridSize = 8;
 
     [Header("Perlin Noise")]
-    [SerializeField] int seed = 3;
-    [SerializeField] Noise noiseGenerator;
+    [Tooltip("Seed of the noisemap.")]
+    [SerializeField] private int seed = 3;
+    [Tooltip("Reference to the noise generator script.")]
+    [SerializeField] private Noise noiseGenerator;
 
     [Header("Tiles")]
+    [Tooltip("Prefab of the tile.")]
     [SerializeField] private GameObject tilePrefab;
+    [Tooltip("Parent object of the tiles that will be created.")]
     [SerializeField] private Transform tilesParent;
+    [Tooltip("List of all the available terrain tiles.")]
     [SerializeField] private List<AvailableTile> availableTiles;
 
     private Tile[,] tiles;
     private float[,] noiseMap;
 
+    #region Unity Methods
     /// <summary>
     /// Create Map and set the neighbours.
     /// </summary>
@@ -38,9 +49,35 @@ public class Map : MonoBehaviour
         CreateMap();
         SetNeighbours();
     }
+    #endregion
 
+    #region Public Methods
     /// <summary>
-    /// Creates a hexagon grid and generates the noise to be used later.
+    /// Return the average cost of the available tiles.
+    /// </summary>
+    /// <returns>Average cost of the available tiles.</returns>
+    public float GetAverageCost()
+    {
+        try
+        {
+            List<float> costs = new List<float>();
+            foreach (AvailableTile tile in availableTiles)
+            {
+                costs.Add(tile.terrain.cost);
+            }
+            return costs.Average();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e.Message);
+            return 0;
+        }
+    }
+    #endregion
+
+    #region Private Methods
+    /// <summary>
+    /// Creates a hexagon grid and generates the noiseMap to be used later.
     /// </summary>
     private void CreateMap()
     {
@@ -54,10 +91,9 @@ public class Map : MonoBehaviour
 
                 float newY = y * gridSpacing.y;
                 float newX = x * gridSpacing.x;
+
                 if (IsEven(y))
-                {
                     newX += gridSpacing.z;
-                }
 
                 tileObject.name = $"Hexagon {y}-{x}";
                 tileObject.transform.position = new Vector3(newX, 0, newY);
@@ -87,16 +123,16 @@ public class Map : MonoBehaviour
                 if (IsEven(y))
                 {
                     upperLeft = new Vector2Int(0, 1); //UpperLeft = y + 1
-                    upperRight = new Vector2Int(1, 1); //UpperRight = Y+1 en x+1
+                    upperRight = new Vector2Int(1, 1); //UpperRight = y + 1 and x + 1
                     bottomLeft = new Vector2Int(0, -1); //BottomLeft = y - 1
-                    bottomRight = new Vector2Int(1, -1);//BottomRight = Y-1 en x+1
+                    bottomRight = new Vector2Int(1, -1);//BottomRight = y - 1 and x + 1
                 }
                 else
                 {
-                    upperLeft = new Vector2Int(-1, 1); //UpperLeft = y + 1 en x-1
-                    upperRight = new Vector2Int(0, 1); //UpperRight = Y+1
-                    bottomLeft = new Vector2Int(-1, -1); //BottomLeft = y - 1 en x-1
-                    bottomRight = new Vector2Int(0, -1); //BottomRight = Y-1 
+                    upperLeft = new Vector2Int(-1, 1); //UpperLeft = y + 1 and x - 1
+                    upperRight = new Vector2Int(0, 1); //UpperRight = y + 1
+                    bottomLeft = new Vector2Int(-1, -1); //BottomLeft = y - 1 en x - 1
+                    bottomRight = new Vector2Int(0, -1); //BottomRight = y - 1 
                 }
 
                 Tile currentTile = tiles[x, y];
@@ -139,14 +175,15 @@ public class Map : MonoBehaviour
     {
         index.x += currentX;
         index.y += currentY;
+
         if (index.x < 0 || index.x >= gridSize || index.y < 0 || index.y >= gridSize)
-        {
             return;
-        }
 
         Tile tile = tiles[index.x, index.y];
+
         if (!tile.CanBeCrossed())
             return;
+
         neighbours.Add(tile);
     }
 
@@ -185,22 +222,5 @@ public class Map : MonoBehaviour
             tile.SetTileInfo(terrain.cost, terrain.canBeCrossed, terrain.terrainMaterial, coordinates);
         }
     }
-
-    public float GetAverageCost()
-    {
-        try
-        {
-            List<float> costs = new List<float>();
-            foreach (AvailableTile tile in availableTiles)
-            {
-                costs.Add(tile.terrain.cost);
-            }
-            return costs.Average();
-        }
-        catch (Exception e)
-        {
-            Debug.LogError(e.Message);
-            return 0;
-        }
-    }
+    #endregion
 }
