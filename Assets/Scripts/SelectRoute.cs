@@ -98,24 +98,31 @@ public class SelectRoute : MonoBehaviour
     {
         float cost = 0;
         IList<IAStarNode> route = AStar.GetPath(start, goal);
-        for (int i = 0; i < route.Count; i++)
+        if (route != null)
         {
-            Tile tile = route[i] as Tile;
-            if (i == 0)
+            for (int i = 0; i < route.Count; i++)
             {
-                continue;
-            }
-            else if (i == route.Count - 1)
-            {
+                Tile tile = route[i] as Tile;
+                if (i == 0)
+                {
+                    continue;
+                }
+                else if (i == route.Count - 1)
+                {
+                    cost += tile.GetCost();
+                    continue;
+                }
+                SpawnRouteTile(tile.transform.position, false);
                 cost += tile.GetCost();
-                continue;
             }
-            SpawnRouteTile(tile.transform.position, false);
-            cost += tile.GetCost();
-        }
 
-        if (costTextField)
-            costTextField.text = $"Cost: {cost} Days";
+            if (costTextField)
+                costTextField.text = $"Cost: {cost} Days";
+        }
+        else
+        {
+            costTextField.text = "No Route Available";
+        }
     }
 
     /// <summary>
